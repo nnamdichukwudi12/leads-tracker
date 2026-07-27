@@ -103,12 +103,46 @@ This repository includes GitHub Actions workflows for:
 
 The `deploy.yml` workflow builds and pushes the Docker image to GitHub Container Registry at `ghcr.io/<owner>/<repo>`.
 
+### Fly.io
+
+This repository includes a `fly.toml` configuration and a GitHub Actions workflow at `.github/workflows/fly-deploy.yml`.
+
+To deploy on Fly.io:
+
+1. Create a Fly app:
+   ```powershell
+   flyctl apps create ai-leads-tracker
+   ```
+2. Set required secrets in GitHub:
+   - `FLY_API_TOKEN`
+   - `DATABASE_URL`
+   - `REDIS_URL`
+   - `SESSION_SECRET`
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`
+   - `GOOGLE_PLACES_API_KEY`
+3. Push to `main` or `master` and the workflow will deploy automatically.
+
 ### Production
 
 - Use PostgreSQL instead of SQLite.
 - Set `FORCE_HTTPS=true` and `SESSION_SECURE_COOKIE=true`.
 - Run `alembic upgrade head` before starting.
 - Host the app on Render, Railway, Fly.io, or similar.
+
+### Supabase
+
+This app supports Supabase Postgres as the database provider. Set `DATABASE_URL` to your Supabase connection string, for example:
+
+```powershell
+DATABASE_URL="postgresql://postgres:<password>@<project-ref>.db.supabase.co:5432/postgres"
+```
+
+When using Supabase:
+
+- Use a separate Redis provider and set `REDIS_URL`.
+- Keep `SESSION_SECRET` secure.
+- Configure `SMTP_*` values for email sending.
+- Run `alembic upgrade head` after deployment.
 
 ## Notes
 
