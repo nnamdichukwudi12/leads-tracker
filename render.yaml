@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: ai-leads-tracker-web
+    env: docker
+    branch: main
+    plan: starter
+    dockerfilePath: Dockerfile
+    autoDeploy: true
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker app.main:app -b 0.0.0.0:$PORT
+    envVars:
+      - key: DATABASE_URL
+      - key: REDIS_URL
+      - key: SESSION_SECRET
+      - key: SMTP_HOST
+      - key: SMTP_PORT
+      - key: SMTP_USERNAME
+      - key: SMTP_PASSWORD
+      - key: SMTP_FROM
+      - key: GOOGLE_CLIENT_ID
+      - key: GOOGLE_CLIENT_SECRET
+      - key: GOOGLE_PLACES_API_KEY
+      - key: FORCE_HTTPS
+      - key: SESSION_SECURE_COOKIE
+  - type: worker
+    name: ai-leads-tracker-worker
+    env: docker
+    branch: main
+    plan: starter
+    dockerfilePath: Dockerfile
+    autoDeploy: true
+    startCommand: celery -A celery_tasks.celery worker --loglevel=info
+    envVars:
+      - key: DATABASE_URL
+      - key: REDIS_URL
+      - key: SESSION_SECRET
+      - key: SMTP_HOST
+      - key: SMTP_PORT
+      - key: SMTP_USERNAME
+      - key: SMTP_PASSWORD
+      - key: SMTP_FROM
+      - key: GOOGLE_CLIENT_ID
+      - key: GOOGLE_CLIENT_SECRET
+      - key: GOOGLE_PLACES_API_KEY
+      - key: FORCE_HTTPS
+      - key: SESSION_SECURE_COOKIE

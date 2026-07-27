@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/leads_db
+      - REDIS_URL=redis://redis:6379/0
+      - SESSION_SECRET=change-this-secret
+      - USE_CELERY=true
+      - FORCE_HTTPS=false
+      - SESSION_SECURE_COOKIE=false
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - redis
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=leads_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  worker:
+    build: .
+    command: celery -A celery_tasks.celery worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/leads_db
+      - REDIS_URL=redis://redis:6379/0
+      - USE_CELERY=true
+      - SESSION_SECRET=change-this-secret
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - redis
+volumes:
+  postgres_data:

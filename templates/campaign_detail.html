@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaign {{ campaign.id }}</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Campaign {{ campaign.id }} - {{ campaign.subject }}</h1>
+    <a href="/dashboard">Back to dashboard</a>
+  </header>
+  <main>
+    <section>
+      <h2>Details</h2>
+      <p>Status: <span id="campaign-status">{{ campaign.status }}</span></p>
+      <p>Recipients: <span id="campaign-recipient-count">{{ campaign.recipient_count }}</span></p>
+      <p>Sent: <span id="campaign-sent-count">{{ campaign.sent_count }}</span></p>
+      <p>Created: {{ campaign.created_at }}</p>
+    </section>
+
+    <section>
+      <h2>Replies</h2>
+      {% if replies %}
+        {% for r in replies %}
+          <article style="margin-bottom:1rem; padding:1rem; background:#fff; border-radius:6px;">
+            <h4>From: {{ r.sender }} | Subject: {{ r.subject }}</h4>
+            {% if r.body_text %}
+              <pre style="white-space:pre-wrap;">{{ r.body_text }}</pre>
+            {% elif r.body_html %}
+              <div>{{ r.body_html | safe }}</div>
+            {% else %}
+              <em>No body extracted</em>
+            {% endif %}
+            <small>Received: {{ r.received_at }}</small>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p>No replies yet.</p>
+      {% endif %}
+    </section>
+
+    <section>
+      <h2>Recipients</h2>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Email</th></tr>
+        </thead>
+        <tbody>
+        {% for lead in recipients %}
+          <tr>
+            <td>{{ lead.id }}</td>
+            <td>{{ lead.name }}</td>
+            <td>{{ lead.email }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <script>
+    (function(){
+      const id = {{ campaign.id }};
+      const socket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/campaigns');
+      socket.addEventListener('message', event => {
+        try{
+          const payload = JSON.parse(event.data);
+          if(payload.campaign_id !== id) return;
+          if(payload.status) document.getElementById('campaign-status').textContent = payload.status;
+          if(typeof payload.sent_count !== 'undefined') document.getElementById('campaign-sent-count').textContent = payload.sent_count || 0;
+        }catch(err){ }
+      });
+      socket.addEventListener('error', () => {
+        console.warn('Campaign websocket disconnected');
+      });
+    })();
+  </script>
+</body>
+</html>

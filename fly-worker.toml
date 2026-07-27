@@ -1,0 +1,12 @@
+app = "ai-leads-worker"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  USE_CELERY = "true"
+
+[processes]
+  worker = "celery -A celery_tasks.celery worker --loglevel=info"

@@ -1,0 +1,215 @@
+body {
+  font-family: Inter, Arial, sans-serif;
+  margin: 0;
+  background: #000;
+  color: #ffea00;
+}
+header {
+  background: #000;
+  color: #ffea00;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #ffea00;
+}
+header h1 {
+  margin: 0;
+  font-size: 1.9rem;
+}
+header nav a {
+  color: #ffea00;
+  text-decoration: none;
+  font-weight: 700;
+  margin-left: 1.25rem;
+}
+header nav a:hover {
+  text-decoration: underline;
+}
+main {
+  padding: 2rem;
+}
+.hero {
+  background: linear-gradient(135deg, #000 0%, #111 100%);
+  border: 1px solid #ffea00;
+  border-radius: 18px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+.hero h2 {
+  margin: 0;
+  font-size: 2.4rem;
+  letter-spacing: -0.03em;
+}
+.hero p {
+  margin: 0;
+  color: #ffee7f;
+  max-width: 720px;
+}
+.hero-search {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.search-form {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.hero-search input {
+  flex: 1 1 320px;
+  border: 2px solid #ffea00;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  background: #111;
+  color: #ffea00;
+  font-size: 1rem;
+}
+.hero-search button {
+  min-width: 160px;
+  padding: 1rem 1.4rem;
+  border-radius: 12px;
+  background: #ffea00;
+  color: #000;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+.search-result {
+  color: #fff;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255,234,0,0.3);
+  border-radius: 12px;
+  background: rgba(255,234,0,0.05);
+}
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background: rgba(0,0,0,0.8);
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-open {
+  display: flex;
+}
+.modal-content {
+  background: #111;
+  border: 2px solid #ffea00;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 0 40px rgba(255,234,0,0.2);
+}
+.modal-close {
+  position:absolute;
+  right: 1.2rem;
+  top: 1.2rem;
+  background: transparent;
+  color: #ffea00;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+section {
+  background: #080808;
+  border: 1px solid #232323;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  padding: 1.2rem 1.4rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  text-align: left;
+  padding: 0.85rem;
+  border-bottom: 1px solid #333;
+}
+th {
+  background: #191919;
+  color: #ffea00;
+}
+tr:nth-child(even) {
+  background: #141414;
+}
+tr:hover {
+  background: rgba(255, 234, 0, 0.08);
+}
+.btn {
+  padding: 0.75rem 1.1rem;
+  border-radius: 10px;
+  background: #ffea00;
+  color: #000;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+.btn.secondary {
+  background: #111;
+  color: #ffea00;
+  border: 1px solid #ffea00;
+}
+.oauth-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 180px;
+  border: 1px solid #ffea00;
+  background: #111;
+  color: #ffea00;
+  text-decoration: none;
+}
+.oauth-button:hover {
+  background: rgba(255,234,0,0.12);
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 0.85rem;
+  box-sizing: border-box;
+  border: 1px solid #333;
+  border-radius: 12px;
+  background: #0f0f0f;
+  color: #ffea00;
+}
+.form-textarea {
+  min-height: 160px;
+}
+.form-row { margin-top: 1rem; }
+.inline-form { display:inline-block; margin-right:1rem }
+.progress { display:inline-block; margin-left:0.5rem; color:#ffea00 }
+.accessible-label { display:block; font-weight:700; margin-bottom:0.4rem; color:#ffea00 }
+small, p, label { color: #ffe76e; }
+blockquote, .panel {
+  background: rgba(255,234,0,0.08);
+  border-left: 4px solid #ffea00;
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  color: #fff;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 234, 0, 0.14);
+  color: #ffea00;
+  font-weight: 700;
+}
+@media (max-width: 900px) {
+  header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .hero-search { flex-direction: column; }
+  .form-input, .form-select, .form-textarea { width: 100%; }
+}

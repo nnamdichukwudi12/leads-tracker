@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Leads Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>AI Leads Tracker</h1>
+      <p>Smart lead capture, campaign automation, and licensing controls for sales teams.</p>
+    </div>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#demo">Static Demo</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div>
+        <h2>Turn prospects into paying customers with intelligent lead automation.</h2>
+        <p>Collect leads, enrich them, track replies, and launch email campaigns from a bold yellow-and-black dashboard.</p>
+        <div class="hero-actions">
+          <button class="btn" id="demo-login">Try Free for 7 Days</button>
+          <a class="btn secondary" href="#pricing">See Pricing</a>
+        </div>
+        <div class="hero-search">
+          <form id="index-search-form" class="search-form">
+            <input id="index-search" type="search" name="q" placeholder="Search leads by keyword or location..." class="form-input" />
+            <button class="btn" type="submit">Search 50 Leads</button>
+          </form>
+          <div id="index-search-result" class="search-result"></div>
+        </div>
+      </div>
+      <div class="hero-feature">
+        <div class="feature-card">
+          <h3>Lead capture</h3>
+          <p>Import from Google Places, CSV, or manual entry and keep your pipeline fresh.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Campaign send</h3>
+          <p>Send SMTP campaigns and track sent status with retries, logs, and reply monitoring.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Licensing ready</h3>
+          <p>Built-in licensing and verification flow with admin bypass and trial activation.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-panel" id="demo">
+      <h2>Static GitHub Pages Demo</h2>
+      <p>This is a live preview of the marketing site on GitHub Pages. The full backend requires a separate deployment.</p>
+    </section>
+
+    <section class="section-panel" id="pricing">
+      <h2>Pricing</h2>
+      <div class="pricing-grid">
+        <article class="pricing-card">
+          <h3>Starter</h3>
+          <p class="price">Free</p>
+          <ul>
+            <li>7-day trial access</li>
+            <li>Lead import + CSV preview</li>
+            <li>Basic campaign sending</li>
+          </ul>
+        </article>
+        <article class="pricing-card featured">
+          <h3>Pro</h3>
+          <p class="price">$49 / month</p>
+          <ul>
+            <li>Unlimited campaigns</li>
+            <li>License gating and admin controls</li>
+            <li>Google OAuth login</li>
+          </ul>
+        </article>
+        <article class="pricing-card">
+          <h3>Enterprise</h3>
+          <p class="price">Custom</p>
+          <ul>
+            <li>Dedicated support</li>
+            <li>Custom licensing workflows</li>
+            <li>Priority feature requests</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <div id="login-modal" class="modal" aria-hidden="true">
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <button id="close-modal" class="modal-close" aria-label="Close">×</button>
+        <h2 id="modal-title">GitHub Pages Preview</h2>
+        <p>This is a static preview of the landing page. The full app backend must be deployed separately to enable login and campaigns.</p>
+        <div class="modal-actions">
+          <button class="btn" id="close-modal-action">Close</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="scripts.js"></script>
+</body>
+</html>

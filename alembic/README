@@ -1,0 +1,9 @@
+This directory contains Alembic migration scripts for the AI Leads Tracker application.
+
+To generate a new migration after model changes:
+
+    alembic revision --autogenerate -m "describe change"
+
+Then apply it with:
+
+    alembic upgrade head

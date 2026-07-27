@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — AI Leads Tracker</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Admin Panel</h1>
+      <p>Manage licensing, pricing, and application controls.</p>
+    </div>
+    <nav>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/admin">Admin</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>Licensing</h2>
+      <div class="panel">
+        <p>Define licensed users, license expiry, and access tiers for the application.</p>
+        <form method="post" action="/admin/license">
+          <div class="form-row">
+            <label class="accessible-label" for="license-key">License key</label>
+            <input id="license-key" name="license_key" class="form-input" placeholder="Enter license key" />
+          </div>
+          <div class="form-row">
+            <label class="accessible-label" for="license-expiry">Expiry date</label>
+            <input id="license-expiry" type="date" name="expiry_date" class="form-input" />
+          </div>
+          <div class="form-row">
+            <button type="submit" class="btn">Save License</button>
+          </div>
+        </form>
+      </div>
+    </section>
+    <section>
+      <h2>Pricing</h2>
+      <div class="panel">
+        <p>Set pricing tiers and subscription details for end users.</p>
+        <form method="post" action="/admin/pricing">
+          <div class="form-row">
+            <label class="accessible-label" for="tier-name">Tier name</label>
+            <input id="tier-name" name="tier_name" class="form-input" placeholder="Starter, Pro, Enterprise" />
+          </div>
+          <div class="form-row">
+            <label class="accessible-label" for="tier-price">Monthly price</label>
+            <input id="tier-price" name="price" type="number" step="0.01" class="form-input" placeholder="0.00" />
+          </div>
+          <div class="form-row">
+            <label class="accessible-label" for="tier-features">Features</label>
+            <textarea id="tier-features" name="features" class="form-textarea" placeholder="Comma-separated feature list"></textarea>
+          </div>
+          <div class="form-row">
+            <button type="submit" class="btn">Save Pricing</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

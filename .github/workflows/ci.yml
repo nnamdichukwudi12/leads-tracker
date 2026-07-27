@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: leads_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    env:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/leads_db
+      REDIS_URL: redis://localhost:6379/0
+      SESSION_SECRET: test-secret
+      FORCE_HTTPS: 'false'
+      SESSION_SECURE_COOKIE: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run Alembic migrations
+        run: |
+          alembic upgrade head
+      - name: Run basic lint/test
+        run: |
+          python -m py_compile app/main.py app/services/emailer.py app/services/leads.py app/models.py app/database.py

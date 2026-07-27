@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Leads Tracker Dashboard</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>AI Leads Tracker</h1>
+      <p>High-performance lead management with admin licensing controls.</p>
+    </div>
+    <nav>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/admin">Admin</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div>
+        <h2>Find the best leads fast.</h2>
+        <p>Search, manage, and send campaigns from a bold yellow-and-black workspace built for sales operators.</p>
+      </div>
+      <div class="hero-search">
+        <form method="get" action="/dashboard" style="flex:1; display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <input id="lead-search" name="q" placeholder="Search leads by name, email, company..." value="{{ q or '' }}" class="form-input" />
+          <button type="submit" class="btn">Search Leads</button>
+        </form>
+      </div>
+    </section>
+
+    <section>
+      <h3>Create Campaign</h3>
+      <form method="post" action="/campaigns/create">
+        <div class="form-row">
+          <label class="accessible-label" for="campaign-subject">Subject</label>
+          <input id="campaign-subject" type="text" name="subject" required class="form-input" />
+        </div>
+        <div class="form-row">
+          <label class="accessible-label" for="campaign-body">Body</label>
+          <textarea id="campaign-body" name="body" rows="6" class="form-textarea"></textarea>
+        </div>
+        <div class="form-row">
+          <label class="accessible-label" for="campaign-recipients">Recipients (select multiple)</label>
+          <select id="campaign-recipients" name="lead_ids" multiple size="6" class="form-select">
+            {% for lead in leads %}
+              {% if lead.email %}
+                <option value="{{ lead.id }}">{{ lead.name or ('Lead ' ~ lead.id) }} — {{ lead.email }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <label><input type="checkbox" name="send_now" /> Send now</label>
+        </div>
+        <div class="form-row">
+          <button type="submit" class="btn">Create Campaign</button>
+          <span id="campaign-progress" class="progress" aria-live="polite"></span>
+        </div>
+      </form>
+      <div class="form-row">
+        <form method="get" action="/leads/export" class="inline-form">
+          <button type="submit" class="btn secondary">Export Leads CSV</button>
+        </form>
+        <form id="import-form" method="post" action="/leads/import" enctype="multipart/form-data" class="inline-form">
+          <label class="accessible-label" for="import-file">Import CSV</label>
+          <input id="import-file" type="file" name="file" accept="text/csv" />
+          <button type="submit" class="btn">Import CSV</button>
+        </form>
+        <form id="import-preview-form" method="post" action="/leads/import/preview" enctype="multipart/form-data" class="inline-form">
+          <label class="accessible-label" for="preview-file">Preview CSV</label>
+          <input id="preview-file" type="file" name="file" accept="text/csv" />
+          <button id="preview-button" type="button" class="btn secondary">Preview CSV</button>
+        </form>
+      </div>
+       <div id="import-preview" class="form-row"></div>
+       <div id="import-mapping" class="form-row"></div>
+    </section>
+    <section>
+      <h2>Campaigns</h2>
+       <div id="campaigns-pagination" class="form-row"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Subject</th>
+            <th>Status</th>
+            <th>Recipients</th>
+            <th>Sent</th>
+            <th>Replies</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody id="campaigns-tbody">
+          {% for campaign in campaigns %}
+          <tr id="campaign-row-{{ campaign.id }}">
+            <td><a href="/campaigns/{{ campaign.id }}/view">{{ campaign.id }}</a></td>
+            <td>{{ campaign.subject }}</td>
+            <td class="campaign-status">{{ campaign.status }}</td>
+            <td>{{ campaign.recipient_count }}</td>
+            <td class="campaign-sent">{{ campaign.sent_count }}</td>
+            <td>{{ reply_counts[campaign.id] }}</td>
+            <td>{{ campaign.created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Leads</h2>
+       <div id="leads-pagination" class="form-row"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Verified</th>
+            <th>Company</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody">
+          {% for lead in leads %}
+          <tr>
+            <td>{{ lead.id }}</td>
+            <td>{{ lead.name }}</td>
+            <td>{{ lead.email }}</td>
+            <td>{{ lead.phone }}</td>
+            <td>{{ lead.verified }}</td>
+            <td>{{ lead.enriched_company }}</td>
+            <td>{{ lead.source }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <script src="/static/scripts.js"></script>
+</body>
+</html>
