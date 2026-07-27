@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
   test:
@@ -46,6 +46,6 @@ jobs:
       - name: Run Alembic migrations
         run: |
           alembic upgrade head
-      - name: Run basic lint/test
+      - name: Run tests
         run: |
-          python -m py_compile app/main.py app/services/emailer.py app/services/leads.py app/models.py app/database.py
+          pytest -q
