@@ -1,160 +1,220 @@
-# AI Leads Tracker
+AI Leads Tracker
 
-A FastAPI-based lead ingestion and campaign application that collects leads, enriches them, sends email campaigns, and tracks replies.
+Quickstart
 
-## Features
+1. Create a virtualenv and install dependencies:
 
-- FastAPI backend with templated UI dashboards
-- Google Places lead ingestion support
-- Lead verification, email normalization, and duplicate suppression
-- SMTP campaign sending with delivery tracking
-- IMAP reply polling stub for reply tracking
-- Celery background worker support with Redis
-- PostgreSQL support via SQLModel and Alembic migrations
-
-## Quick Start
-
-1. Create and activate a Python virtual environment:
-
-```powershell
+```bash
 python -m venv .venv
 .venv\Scripts\activate
-```
-
-2. Install dependencies:
-
-```powershell
-pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-3. Copy the example environment file:
+2. Copy `.env.example` to `.env` and set your keys (Google Places API key, SMTP creds, IMAP creds).
 
-```powershell
-copy .env.example .env
-```
+3. Run the app:
 
-4. Update `.env` with your values.
-
-5. Run the application locally:
-
-```powershell
+```bash
 uvicorn app.main:app --reload
 ```
 
-6. Open the app in your browser at `http://127.0.0.1:8000`.
+Overview
 
-## Environment Variables
+- `app/` contains the FastAPI application, services, and models.
+- `app/services/google_places.py` fetches leads from Google Places when `GOOGLE_PLACES_API_KEY` is set.
+- `app/services/leads.py` enriches, verifies, normalizes, and debounces Google lead results.
+- `app/services/emailer.py` sends campaigns via SMTP and tracks retry attempts.
+- `app/services/imap_tracker.py` provides a reply polling stub for IMAP.
+- `enrich/` contains enrichment and validation helper stubs.
 
-Required values in `.env`:
+API endpoints
 
-- `DATABASE_URL` - database connection string
-- `SESSION_SECRET` - session signing secret
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`
-- `GOOGLE_PLACES_API_KEY` (optional for Google lead lookup)
+- `GET /health` — health check.
+- `POST /leads/fetch` — fetch leads from Google Places and save verified/enriched leads.
+- `GET /leads` — list all saved leads.
+- `GET /dashboard` — UI dashboard for lead and campaign management.
+- `GET /campaigns` — list campaigns and status metadata.
+- `GET /campaigns/{campaign_id}` — retrieve campaign details.
+- `GET /campaigns/{campaign_id}/replies` — view tracked replies for a campaign.
+- `POST /campaigns/send` — send an SMTP campaign to saved leads with email addresses.
 
-Optional values:
+Status transitions
 
-- `REDIS_URL` - Redis URL for Celery
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google OAuth
-- `FORCE_HTTPS` - `true`/`false`
-- `SESSION_SECURE_COOKIE` - `true`/`false`
-- `ADMIN_EMAIL` - admin login email
+- `draft` — campaign is created but not yet sent.
+- `sending` — campaign send process is underway.
+- `sent` — campaign emails were successfully delivered.
+- `partial` — campaign delivered to some recipients but with failures.
+- `failed` — campaign failed to deliver.
 
-## Local Development
+Notes
 
-- `uvicorn app.main:app --reload` starts the web server.
-- Use `alembic upgrade head` after updating models.
-- `celery -A celery_tasks.celery worker --loglevel=info` starts a Celery worker.
-- `docker-compose up --build` can start the app with Redis if configured.
+This scaffold now includes practical lead ingestion flows and campaign logging. Next integration work can add real enrichment providers, IMAP reply mapping, and a UI/dashboard.
 
-## API Endpoints
+Background worker
 
-- `GET /health` — health check
-- `GET /` — homepage
-- `GET /dashboard` — admin dashboard
-- `GET /login` and `POST /login` — login flow
-- `POST /leads/fetch` — fetch leads from Google Places
-- `GET /leads` — list leads
-- `GET /campaigns` — list campaigns
-- `GET /campaigns/{campaign_id}` — campaign details
-- `GET /campaigns/{campaign_id}/replies` — campaign replies
-- `POST /campaigns/send` — send campaign emails
+- To process sends and IMAP work reliably in production, a Celery worker with Redis is supported.
+- To run locally with Redis (requires Redis installed or use Docker):
 
-## Testing
-
-Run the repository tests with:
-
-```powershell
-pytest -q
+```bash
+redis-server &
+celery -A celery_tasks.celery worker --loglevel=info
 ```
 
-## GitHub Actions
+Or with Docker Compose:
 
-This repository includes GitHub Actions workflows for:
+```bash
+docker-compose up --build
+```
 
-- `ci.yml` — install dependencies, run migrations, and execute tests on `main` and `master`
-- `deploy.yml` — build and publish a Docker image to GitHub Container Registry on `main`/`master`
-- `pages.yml` — publish `docs/` to GitHub Pages on `main`/`master`
+Production deployment
 
-## Deployment
+- Set `DATABASE_URL` to a production database, for example:
+  `postgresql+psycopg2://user:pass@db:5432/leads_db`
+- Set `SESSION_SECRET` to a strong random value.
+- Set `SESSION_SECURE_COOKIE=true` and `FORCE_HTTPS=true` in production.
+- Run database migrations before starting:
 
-### Docker
+```bash
+alembic upgrade head
+```
 
-The `deploy.yml` workflow builds and pushes the Docker image to GitHub Container Registry at `ghcr.io/<owner>/<repo>`.
+Supabase Postgres support
 
-### Fly.io
+- Supabase can be used as the Postgres database provider for this app.
+- Supabase does not host Python or Celery, so you still need a separate app host such as Fly.io, Render, Railway, or Heroku.
+- Set `DATABASE_URL` to the Supabase connection string prepared in the Supabase project settings.
+- Use an external Redis service for `REDIS_URL` because Supabase does not provide Redis.
+- Example Supabase-compatible database URL:
+  `postgresql://postgres:<password>@<project-ref>.db.supabase.co:5432/postgres`
 
-This repository includes a `fly.toml` configuration and a GitHub Actions workflow at `.github/workflows/fly-deploy.yml`.
-
-To deploy on Fly.io:
-
-1. Create a Fly app:
-   ```powershell
-   flyctl apps create ai-leads-tracker
-   ```
-2. Set required secrets in GitHub:
-   - `FLY_API_TOKEN`
-   - `DATABASE_URL`
-   - `REDIS_URL`
-   - `SESSION_SECRET`
-   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`
-   - `GOOGLE_PLACES_API_KEY`
-3. Push to `main` or `master` and the workflow will deploy automatically.
-
-### Production
+Production-ready recommendations
 
 - Use PostgreSQL instead of SQLite.
-- Set `FORCE_HTTPS=true` and `SESSION_SECURE_COOKIE=true`.
-- Run `alembic upgrade head` before starting.
-- Host the app on Render, Railway, Fly.io, or similar.
+- Run the app with a process manager or via Gunicorn/Uvicorn workers.
+- Configure SMTP credentials and an email provider with bounce handling.
+- Use HTTPS and secure session cookies.
 
-### Supabase
+Supabase Postgres + Render/Railway
 
-This app supports Supabase Postgres as the database provider. Set `DATABASE_URL` to your Supabase connection string, for example:
+- Use Supabase only as the Postgres provider (`DATABASE_URL`).
+- Use an external Redis provider for `REDIS_URL` such as Upstash, Redis Cloud, or a managed Redis instance.
+- Deploy the Python app to a container-friendly host like Render or Railway.
+- Example host setup:
+  1. Create a new service on Render/Railway.
+  2. Connect your GitHub repo.
+  3. Set the start command to:
+     `gunicorn -k uvicorn.workers.UvicornWorker app.main:app -b 0.0.0.0:$PORT`
+  4. Set environment variables:
+     - `DATABASE_URL` → Supabase connection string
+     - `REDIS_URL` → Redis provider URL
+     - `SESSION_SECRET`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_PLACES_API_KEY`, `FORCE_HTTPS=true`, `SESSION_SECURE_COOKIE=true`
+  5. Run `alembic upgrade head` after deployment if your host supports one-time commands.
+- This lets Supabase handle the database while Render/Railway hosts the FastAPI app and serves web traffic.
 
-```powershell
-DATABASE_URL="postgresql://postgres:<password>@<project-ref>.db.supabase.co:5432/postgres"
+Hosting on cPanel
+
+1. Verify your cPanel account supports Python apps and a virtual environment.
+2. Upload the repository files to a directory under your cPanel account.
+3. In cPanel, open "Setup Python App" and create a new app using Python 3.11.
+4. Set the app directory to your project folder and install dependencies from `requirements.txt`.
+5. Create a `.env` file in the project root with production values.
+6. Set `DATABASE_URL` to your cPanel database (MySQL/PostgreSQL) and update `app/main.py` if needed.
+7. In cPanel, start the Python app; it will serve via the cPanel passenger gateway.
+8. Use cPanel’s MySQL/PostgreSQL manager to create the database, then run `alembic upgrade head` via SSH if available.
+
+Hosting on GitHub
+
+1. Push the repository to a GitHub repo.
+2. Add `.github/workflows/deploy.yml` or use GitHub Actions for CI/CD.
+3. For GitHub Pages, only static frontend is supported; this app needs a server host.
+4. To host from GitHub, connect with a hosting provider like Render, Fly.io, Railway, or Heroku.
+5. Configure the service to deploy from the GitHub repo and set environment variables.
+6. Enable build commands:
+   - `pip install -r requirements.txt`
+   - `alembic upgrade head`
+   - `gunicorn -k uvicorn.workers.UvicornWorker app.main:app -b 0.0.0.0:$PORT`
+
+Supabase and Render deployment
+
+- Supabase can be used as the Postgres database provider only.
+- Render hosts the Python FastAPI app and, optionally, the Celery worker.
+- Use a separate Redis provider such as Upstash, Redis Cloud, Railway Redis, or Heroku Redis.
+- Set `DATABASE_URL` to your Supabase connection string.
+- Set `REDIS_URL` to your Redis provider URL.
+- Set `SESSION_SECRET`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_PLACES_API_KEY`, `FORCE_HTTPS=true`, and `SESSION_SECURE_COOKIE=true` on Render.
+- If Render does not automatically detect `render.yaml`, use Docker and start with:
+  `gunicorn -k uvicorn.workers.UvicornWorker app.main:app -b 0.0.0.0:$PORT`
+
+Render migration guidance
+
+- If Render provides a shell, run:
+  `alembic upgrade head`
+- Alternatively, run migrations locally against the Supabase database:
+  ```powershell
+  cd 'C:\Users\user\Documents\ai-leads-tracker'
+  python -m venv .venv
+  .\.venv\Scripts\Activate
+  pip install -r requirements.txt
+  $env:DATABASE_URL="postgresql://postgres:<password>@<project-ref>.db.supabase.co:5432/postgres?sslmode=require"
+  alembic upgrade head
+  ```
+
+Fly.io deployment
+
+1. Make sure you are logged in with `fly auth login`.
+2. Create or select an app:
+   ```bash
+   fly apps create ai-leads-tracker
+   ```
+3. If you already created the app manually, use `fly launch --no-deploy --name ai-leads-tracker --dockerfile Dockerfile`.
+4. Set the required secrets:
+   ```bash
+   fly secrets set \
+     DATABASE_URL="postgresql://..." \
+     REDIS_URL="redis://..." \
+     SESSION_SECRET="your-strong-secret" \
+     SMTP_HOST="..." \
+     SMTP_PORT="587" \
+     SMTP_USERNAME="..." \
+     SMTP_PASSWORD="..." \
+     SMTP_FROM="Your Name <you@example.com>" \
+     GOOGLE_CLIENT_ID="..." \
+     GOOGLE_CLIENT_SECRET="..." \
+     GOOGLE_PLACES_API_KEY="..." \
+     FORCE_HTTPS=true \
+     SESSION_SECURE_COOKIE=true
+   ```
+5. Deploy:
+   ```bash
+   fly deploy
+   ```
+6. Open your app:
+   ```bash
+   fly open
+   ```
+
+Fly worker (optional)
+
+If you want Celery worker support, create a second Fly app for the worker and deploy it with the command:
+```bash
+fly apps create ai-leads-worker
+fly deploy --config fly-worker.toml
 ```
 
-When using Supabase:
 
-- Use a separate Redis provider and set `REDIS_URL`.
-- Keep `SESSION_SECRET` secure.
-- Configure `SMTP_*` values for email sending.
-- Run `alembic upgrade head` after deployment.
+1. Create a GitHub repo and push the code.
+2. Ensure GitHub Container Registry is enabled for your account.
+3. The workflow in `.github/workflows/deploy.yml` publishes Docker images to `ghcr.io/<owner>/<repo>:latest`.
+4. On your deployment host, pull `ghcr.io/<owner>/<repo>:latest` and run it with the proper env vars.
+5. Use the same database and SMTP env vars as defined in `.env.example`.
 
-## Notes
+GitHub Pages static preview
 
-- The repo currently stores a local SQLite database by default unless `DATABASE_URL` is set.
-- The `templates/` and `static/` directories provide the dashboard UI and form flows.
-- The `enrich/` folder contains helper stubs for lead enrichment.
+1. The `docs/` directory now contains a static landing page preview.
+2. The workflow in `.github/workflows/pages.yml` publishes this preview to GitHub Pages whenever `main` is pushed.
+3. Enable Pages in the repository settings and choose the `gh-pages` branch.
+4. The live preview will show the marketing landing page, not the backend app.
 
-## Useful Commands
+CSV import preview
 
-```powershell
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn app.main:app --reload
-pytest -q
-```
+- Use the "Preview CSV" button on the dashboard to upload a CSV and see a sample of rows plus duplicate detection before importing.
