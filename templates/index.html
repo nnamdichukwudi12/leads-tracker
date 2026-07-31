@@ -1,157 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Leads Tracker</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-</head>
-<body>
-  <header>
+{% extends "base.html" %}
+{% block title %}Home — AI Leads Tracker{% endblock %}
+
+{% block content %}
+  <section class="hero">
     <div>
-      <h1>AI Leads Tracker</h1>
-      <p>Smart lead capture, campaign automation, and licensing controls for sales teams.</p>
-    </div>
-    <nav>
-      <a href="/">Home</a>
-      <a href="/login">Try Free</a>
-      <a href="/admin">Admin</a>
-    </nav>
-  </header>
-  <main>
-    <section class="hero">
-      <div>
-        <h2>Turn prospects into paying customers with intelligent lead automation.</h2>
-        <p>Collect leads, enrich them, track replies, and launch email campaigns from a bold yellow-and-black dashboard.</p>
-        <div class="hero-actions">
-          <a class="btn" href="/login?next=/verify">Try Free for 7 Days</a>
-          <a class="btn secondary" href="#pricing">See Pricing</a>
-        </div>
-        <div class="hero-search">
-          <form id="index-search-form" class="search-form">
-            <input id="index-search" type="search" name="q" placeholder="Search leads by keyword or location..." class="form-input" />
-            <button class="btn" type="submit">Search 50 Leads</button>
-          </form>
-          <div id="index-search-result" class="search-result"></div>
-        </div>
+      <h2>Turn prospects into paying customers with intelligent lead automation.</h2>
+      <p>Collect leads, enrich them, track replies, and launch email campaigns with an easy, focused interface.</p>
+      <div class="hero-actions" style="margin-top:1rem">
+        <a class="btn" href="/login?next=/verify">Try Free for 7 Days</a>
+        <a class="btn secondary" href="#pricing">See Pricing</a>
       </div>
-      <div class="hero-feature">
-        <div class="feature-card">
-          <h3>Lead capture</h3>
-          <p>Import from Google Places, CSV, or manual entry and keep your pipeline fresh.</p>
-        </div>
-        <div class="feature-card">
-          <h3>Campaign send</h3>
-          <p>Send SMTP campaigns and track sent status with retries, logs, and reply monitoring.</p>
-        </div>
-        <div class="feature-card">
-          <h3>Licensing ready</h3>
-          <p>Built-in licensing and verification flow with admin bypass and trial activation.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section-panel">
-      <h2>Why AI Leads Tracker?</h2>
-      <div class="benefit-grid">
-        <div class="benefit-card">
-          <h4>Automated enrichment</h4>
-          <p>Leads are enriched and verified automatically, so your sales team spends time closing deals, not cleaning data.</p>
-        </div>
-        <div class="benefit-card">
-          <h4>Real-time campaign status</h4>
-          <p>Watch campaign send progress, open logs, and reply counts in a single dashboard.</p>
-        </div>
-        <div class="benefit-card">
-          <h4>Professional UX</h4>
-          <p>A strong black and yellow theme keeps focus on action items and delivers a premium experience.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section-panel" id="pricing">
-      <h2>Pricing</h2>
-      <div class="pricing-grid">
-        <article class="pricing-card">
-          <h3>Starter</h3>
-          <p class="price">Free</p>
-          <ul>
-            <li>7-day trial access</li>
-            <li>Lead import + CSV preview</li>
-            <li>Basic campaign sending</li>
-          </ul>
-          <a class="btn" href="/login">Start Free Trial</a>
-        </article>
-        <article class="pricing-card featured">
-          <h3>Pro</h3>
-          <p class="price">$49 / month</p>
-          <ul>
-            <li>Unlimited campaigns</li>
-            <li>License gating and admin controls</li>
-            <li>Google OAuth login</li>
-          </ul>
-          <a class="btn" href="/login">Start Free Trial</a>
-        </article>
-        <article class="pricing-card">
-          <h3>Enterprise</h3>
-          <p class="price">Custom</p>
-          <ul>
-            <li>Dedicated support</li>
-            <li>Custom licensing workflows</li>
-            <li>Priority feature requests</li>
-          </ul>
-          <a class="btn" href="/login">Contact Sales</a>
-        </article>
-      </div>
-    </section>
-    <div id="login-modal" class="modal" aria-hidden="true">
-      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <button id="close-modal" class="modal-close" aria-label="Close">×</button>
-        <h2 id="modal-title">Try AI Leads Tracker for 7 Days</h2>
-        <p>You found 50 leads. Sign in now to activate your free trial and use the full app.</p>
-        <div class="modal-actions">
-          <a class="btn" href="/login?next=/verify">Continue to Login</a>
-          <a class="btn secondary" href="/auth/google?next=/verify">Login with Google</a>
-        </div>
+      <div style="margin-top:1rem">
+        <form id="index-search-form">
+          <input id="index-search" type="search" name="q" placeholder="Search leads by keyword or location..." class="form-input" />
+        </form>
+        <div id="index-search-result" style="margin-top:0.6rem"></div>
       </div>
     </div>
-  </main>
-  <script>
-    document.addEventListener('DOMContentLoaded', function(){
-      const searchForm = document.getElementById('index-search-form');
-      const resultBox = document.getElementById('index-search-result');
-      const modal = document.getElementById('login-modal');
-      const closeModal = document.getElementById('close-modal');
-      if(searchForm && resultBox && modal){
-        searchForm.addEventListener('submit', function(event){
-          event.preventDefault();
-          const query = document.getElementById('index-search').value.trim();
-          if(!query){
-            resultBox.textContent = 'Please enter a search term.';
-            return;
-          }
-          resultBox.textContent = 'Searching...';
-          fetch('/api/leads?q=' + encodeURIComponent(query) + '&page=1&per_page=50')
-            .then(r => r.json())
-            .then(data => {
-              const hits = data.total || (data.items && data.items.length) || 0;
-              if(hits >= 50){
-                resultBox.textContent = 'Nice work! We found ' + hits + ' leads. Please log in to continue.';
-                modal.setAttribute('aria-hidden', 'false');
-                modal.classList.add('modal-open');
-              } else {
-                resultBox.textContent = 'Only ' + hits + ' leads matched. Try a broader query to get 50 leads.';
-              }
-            }).catch(() => {
-              resultBox.textContent = 'Search failed. Please try again.';
-            });
-        });
-        closeModal.addEventListener('click', function(){
-          modal.setAttribute('aria-hidden', 'true');
-          modal.classList.remove('modal-open');
-        });
-      }
-    });
-  </script>
-</body>
-</html>
+    <div>
+      <div class="feature-card">
+        <h3>Lead capture</h3>
+        <p>Import from Google Places, CSV, or manual entry and keep your pipeline fresh.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Campaign send</h3>
+        <p>Send SMTP campaigns and track sent status with retries, logs, and reply monitoring.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Licensing ready</h3>
+        <p>Built-in licensing and verification flow with admin bypass and trial activation.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why AI Leads Tracker?</h2>
+    <div class="benefit-grid">
+      <div class="benefit-card">
+        <h4>Automated enrichment</h4>
+        <p>Leads are enriched and verified automatically, so your team spends time closing deals.</p>
+      </div>
+      <div class="benefit-card">
+        <h4>Real-time campaign status</h4>
+        <p>Watch campaign send progress, logs, and replies in a single place.</p>
+      </div>
+      <div class="benefit-card">
+        <h4>Professional UX</h4>
+        <p>A clean, modern layout surfaces the actions you need most.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <h2>Pricing</h2>
+    <div class="pricing-grid">
+      <article class="pricing-card">
+        <h3>Starter</h3>
+        <p class="price">Free</p>
+        <a class="btn" href="/login">Start Free Trial</a>
+      </article>
+      <article class="pricing-card featured">
+        <h3>Pro</h3>
+        <p class="price">$49 / month</p>
+        <a class="btn" href="/login">Start Free Trial</a>
+      </article>
+      <article class="pricing-card">
+        <h3>Enterprise</h3>
+        <p class="price">Custom</p>
+        <a class="btn" href="/login">Contact Sales</a>
+      </article>
+    </div>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const searchForm = document.getElementById('index-search-form');
+  const resultBox = document.getElementById('index-search-result');
+  if(searchForm && resultBox){
+    searchForm.addEventListener('submit', function(e){ e.preventDefault(); });
+    document.getElementById('index-search').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); search(); } });
+    function search(){
+      const q = document.getElementById('index-search').value.trim();
+      if(!q) { resultBox.textContent = 'Please enter a search term.'; return; }
+      resultBox.textContent = 'Searching...';
+      fetch('/api/leads?q=' + encodeURIComponent(q) + '&page=1&per_page=50')
+        .then(r => r.json()).then(data => {
+          const hits = data.total || (data.items && data.items.length) || 0;
+          if(hits >= 50) resultBox.textContent = `Found ${hits} leads — please log in to continue.`;
+          else resultBox.textContent = `Only ${hits} leads matched.`;
+        }).catch(()=> resultBox.textContent = 'Search failed.');
+    }
+  }
+});
+</script>
+{% endblock %}

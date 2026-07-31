@@ -1,56 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verify Access — AI Leads Tracker</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-</head>
-<body>
-  <header>
-    <div>
-      <h1>Verify Access</h1>
-      <p>Complete verification before full usage, or have an admin bypass.</p>
-    </div>
-    <nav>
-      <a href="/logout">Logout</a>
-    </nav>
-  </header>
-  <main>
-    <section>
-      {% if message %}
-        <div class="panel" style="border-color:#ffea00; background:rgba(255,234,0,0.1);">{{ message }}</div>
-      {% endif %}
-      <h2>Welcome, {{ user.email }}</h2>
-      <p>Choose a verification option to unlock the dashboard.</p>
-      <form method="post" action="/verify" class="form-row">
-        <input type="hidden" name="action" value="email_test" />
-        <button type="submit" class="btn">Verify with Email</button>
-      </form>
-      <div class="panel" style="margin-top:1.5rem;">
-        <h3>License Activation</h3>
-        <form method="post" action="/verify">
-          <input type="hidden" name="action" value="license" />
-          <div class="form-row">
-            <label class="accessible-label" for="license_key">License Key</label>
-            <input id="license_key" name="license_key" class="form-input" placeholder="Enter license key" />
-          </div>
-          <div class="form-row">
-            <label class="accessible-label" for="expiry_date">Expiry Date</label>
-            <input id="expiry_date" name="expiry_date" type="date" class="form-input" />
-          </div>
-          <div class="form-row">
-            <button type="submit" class="btn secondary">Activate License</button>
-          </div>
-        </form>
-      </div>
-      {% if license %}
-        <div class="panel" style="margin-top:1.5rem;">
-          <p>Current license: <strong>{{ license.license_key }}</strong></p>
-          <p>Expiry: <strong>{{ license.expiry_date }}</strong></p>
+{% extends "base.html" %}
+{% block title %}Verify — AI Leads Tracker{% endblock %}
+{% block content %}
+  <section style="max-width:720px;margin:0 auto;">
+    {% if message %}
+      <div class="panel">{{ message }}</div>
+    {% endif %}
+    <h2>Welcome, {{ user.email }}</h2>
+    <p style="color:var(--muted)">Choose a verification option to unlock the dashboard.</p>
+    <form method="post" action="/verify" style="margin-top:1rem">
+      <input type="hidden" name="action" value="email_test" />
+      <button type="submit" class="btn">Verify with Email</button>
+    </form>
+
+    <div class="panel" style="margin-top:1.25rem">
+      <h3>License Activation</h3>
+      <form method="post" action="/verify">
+        <input type="hidden" name="action" value="license" />
+        <div class="form-row">
+          <label class="accessible-label" for="license_key">License Key</label>
+          <input id="license_key" name="license_key" class="form-input" placeholder="Enter license key" />
         </div>
-      {% endif %}
-    </section>
-  </main>
-</body>
-</html>
+        <div class="form-row">
+          <label class="accessible-label" for="expiry_date">Expiry Date</label>
+          <input id="expiry_date" name="expiry_date" type="date" class="form-input" />
+        </div>
+        <div class="form-row">
+          <button type="submit" class="btn secondary">Activate License</button>
+        </div>
+      </form>
+    </div>
+
+    {% if license %}
+      <div class="panel" style="margin-top:1rem">
+        <p>Current license: <strong>{{ license.license_key }}</strong></p>
+        <p>Expiry: <strong>{{ license.expiry_date }}</strong></p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

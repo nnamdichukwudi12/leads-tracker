@@ -50,7 +50,10 @@ if os.getenv('GOOGLE_CLIENT_ID') and os.getenv('GOOGLE_CLIENT_SECRET'):
         client_kwargs={'scope': 'openid email profile'},
     )
 
+from urllib.parse import quote_plus
+
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["url_encode"] = lambda value: quote_plus(value or "")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 engine = get_engine()

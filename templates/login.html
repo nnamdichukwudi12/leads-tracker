@@ -1,37 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login — AI Leads Tracker</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-</head>
-<body>
-  <header>
-    <div>
-      <h1>AI Leads Tracker</h1>
-      <p>Sign in to access lead management and licensing.</p>
-    </div>
-  </header>
-  <main>
-    <section>
-      <h2>Login</h2>
-      {% if error %}
-        <div class="panel" style="border-color:#ff5e5e; background:rgba(255,94,94,0.1); color:#fff;">{{ error }}</div>
-      {% endif %}
-      <form method="post" action="/login">
-        <input type="hidden" name="next" value="{{ next }}" />
+{% extends "base.html" %}
+{% block title %}Login — AI Leads Tracker{% endblock %}
+{% block content %}
+  <section style="max-width:520px;margin:0 auto;">
+    <h2>Login</h2>
+    {% if error %}
+      <div class="panel">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/login">
+      <input type="hidden" name="next" value="{{ next }}" />
+      <div class="form-row">
+        <label class="accessible-label" for="email">Email</label>
+        <input id="email" type="email" name="email" class="form-input" placeholder="you@example.com" required />
+      </div>
+      <div class="form-row" style="margin-top:1rem">
+        <button type="submit" class="btn">Login with Email</button>
+        <a class="oauth-button" href="/auth/google?next={{ next | url_encode }}">Login with Google</a>
+      </div>
+    </form>
+    <p style="margin-top:0.75rem;color:var(--muted);">Use the Google button for a Gmail OAuth login.</p>
+  </section>
+{% endblock %}
         <div class="form-row">
-          <label class="accessible-label" for="email">Email</label>
-          <input id="email" type="email" name="email" class="form-input" placeholder="you@example.com" required />
-        </div>
-        <div class="form-row">
-          <button type="submit" class="btn">Login with Email</button>
-          <a class="btn secondary oauth-button" href="/auth/google?next={{ next | url_encode }}">Login with Google</a>
-        </div>
-      </form>
-      <p style="color:#ffe76e; margin-top:1rem;">Use the Google button for a real Gmail OAuth login.</p>
-    </section>
-  </main>
-</body>
-</html>
