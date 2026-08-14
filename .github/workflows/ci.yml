@@ -46,6 +46,6 @@ jobs:
       - name: Run Alembic migrations
         run: |
           alembic upgrade head
-      - name: Run tests
-        run: |
-          pytest -q
+     - name: Run tests
+  run: |
+    PYTHONPATH=${{ github.workspace }} pytest -q
