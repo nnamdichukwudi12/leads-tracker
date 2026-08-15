@@ -16,9 +16,10 @@ const argv = require('minimist')(process.argv.slice(2));
 const emailsPath = argv.emails || argv.e || 'emails.txt';
 const subjectPath = argv.subject || argv.s || 'subject.txt';
 const htmlPath = argv.html || argv.h || 'letter.html';
-const batchSize = Number(process.env.BATCH_SIZE || argv.batch || 10);
-const delayMs = Number(process.env.DELAY_MS || argv.delay || 500);
-const maxRetries = Number(process.env.MAX_RETRIES || 3);
+const batchSize = Number(process.env.BATCH_SIZE || argv.batch || 1);
+let delayMs = Number(process.env.DELAY_MS || argv.delay || 1000); // milliseconds between batches
+const maxRetries = Number(process.env.MAX_RETRIES || argv.retries || 5);
+const dryRun = argv.dry || argv.dryrun || false;
 
 const {
   AGENTSMAIL_API_KEY,
@@ -33,13 +34,20 @@ if (!AGENTSMAIL_API_KEY || !AGENTSMAIL_BASE_URL || !AGENTSMAIL_MAILBOX) {
   process.exit(1);
 }
 
+// AgentsMail rate limit: 60 sends / minute per mailbox
+// To avoid hitting rate limits, ensure delayMs between batches is at least batchSize * 1000 ms
+const minDelayMs = batchSize * 1000;
+if (delayMs < minDelayMs) {
+  console.warn(`Adjusting delay to meet AgentsMail rate limits: batchSize=${batchSize} => delay >= ${minDelayMs}ms`);
+  delayMs = minDelayMs;
+}
+
 function sleep(ms) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
 function isEmail(s) {
-  // basic email validation
-  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s.trim());
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(s).trim());
 }
 
 async function loadFiles() {
@@ -54,7 +62,7 @@ async function loadFiles() {
     .map((l) => l.trim())
     .filter((l) => l.length > 0 && isEmail(l));
 
-  const subject = subjectRaw.split(/\r?\n/)[0].trim();
+  const subject = subjectRaw.split(/\r?\n/).find(Boolean) || '';
   const html = htmlRaw;
 
   return { emails, subject, html };
@@ -71,19 +79,32 @@ async function sendMail(recipient, subject, html) {
     html
   };
 
+  if (dryRun) {
+    return { ok: true, dryRun: true, payload };
+  }
+
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${AGENTSMAIL_API_KEY}`
     },
-    body: JSON.stringify(payload),
-    // timeout and other options can be added if needed
+    body: JSON.stringify(payload)
   });
 
   const text = await res.text();
+
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${text}`);
+    // Try to parse structured error
+    let body = text;
+    try { body = JSON.parse(text); } catch (e) { /* leave as text */ }
+    const err = new Error(`HTTP ${res.status}: ${JSON.stringify(body)}`);
+    err.status = res.status;
+    err.body = body;
+    // attach rate-limit info if present
+    const retryAfter = res.headers && (res.headers.get && res.headers.get('retry-after'));
+    if (retryAfter) err.retryAfter = Number(retryAfter);
+    throw err;
   }
 
   try {
@@ -95,18 +116,44 @@ async function sendMail(recipient, subject, html) {
 
 async function sendWithRetries(email, subject, html) {
   let attempt = 0;
+  let lastErr = null;
+
   while (attempt < maxRetries) {
+    attempt += 1;
     try {
       const result = await sendMail(email, subject, html);
       return { success: true, result };
     } catch (err) {
-      attempt += 1;
-      if (attempt >= maxRetries) {
-        return { success: false, error: err.message };
+      lastErr = err;
+      // Handle specific API errors
+      if (err.status === 401) {
+        return { success: false, error: 'UNAUTHORIZED - check AGENTSMAIL_API_KEY' };
       }
-      await sleep(1000 * attempt); // exponential-ish backoff
+      if (err.status === 403 && err.body && err.body.code === 'TRIAL_QUOTA_EXCEEDED') {
+        return { success: false, error: 'TRIAL_QUOTA_EXCEEDED - trial send limit reached' };
+      }
+      if (err.status === 429) {
+        // Rate limited: respect Retry-After if provided, otherwise exponential backoff
+        const wait = err.retryAfter ? (Number(err.retryAfter) * 1000) : (1000 * attempt);
+        console.warn(`Rate limited when sending to ${email}. Waiting ${wait}ms (attempt ${attempt}/${maxRetries})`);
+        await sleep(wait);
+        continue;
+      }
+
+      // For other 5xx or transient errors, exponential backoff
+      if (err.status >= 500 || !err.status) {
+        const wait = 1000 * Math.pow(2, attempt - 1);
+        console.warn(`Transient error sending to ${email}: ${err.message}. Retrying in ${wait}ms (attempt ${attempt}/${maxRetries})`);
+        await sleep(wait);
+        continue;
+      }
+
+      // Non-retryable error
+      return { success: false, error: String(err.message) };
     }
   }
+
+  return { success: false, error: lastErr ? String(lastErr.message) : 'unknown' };
 }
 
 (async function main() {
@@ -119,6 +166,7 @@ async function sendWithRetries(email, subject, html) {
     }
 
     console.log(`Sending to ${emails.length} recipients in batches of ${batchSize} (delay ${delayMs}ms between batches)...`);
+    if (dryRun) console.log('DRY RUN: no requests will be sent.');
 
     const successes = [];
     const failures = [];
@@ -126,13 +174,23 @@ async function sendWithRetries(email, subject, html) {
     for (let i = 0; i < emails.length; i += batchSize) {
       const batch = emails.slice(i, i + batchSize);
 
-      const promises = batch.map((email) => sendWithRetries(email, subject, html).then((r) => ({ email, ...r })));
-
-      const results = await Promise.all(promises);
-
-      for (const r of results) {
-        if (r.success) successes.push(r);
-        else failures.push(r);
+      // Send sequentially within the batch to be safe with rate limits
+      for (const email of batch) {
+        process.stdout.write(`Sending to ${email} ... `);
+        const res = await sendWithRetries(email, subject, html);
+        if (res.success) {
+          successes.push({ email, res: res.result });
+          console.log('OK');
+        } else {
+          failures.push({ email, error: res.error });
+          console.log('FAILED -', res.error);
+          // If trial quota exceeded, abort further sends
+          if (String(res.error).includes('TRIAL_QUOTA_EXCEEDED')) {
+            console.error('Trial quota reached; stopping further sends.');
+            i = emails.length; // break outer loop
+            break;
+          }
+        }
       }
 
       if (i + batchSize < emails.length) await sleep(delayMs);
